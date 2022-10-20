@@ -1,12 +1,12 @@
 import type { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import { TRACKS } from "../data/2022-09";
 import styles from "../styles/Home.module.css";
 
 type TODO = any;
 type SpotifyTrack = TODO;
 type SpotifyArtist = TODO;
+type SpotifyItem = TODO;
 
 type Track = {
   uri: string;
@@ -56,16 +56,31 @@ const Home: NextPage<HomeProps> = ({ tracks }) => {
 };
 
 export const getStaticProps: GetStaticProps = async () => {
-  const qs = encodeURI(TRACKS.map((url) => url.split("track/")[1]).join(","));
-  const res = await fetch("https://api.spotify.com/v1/tracks?ids=" + qs, {
+  const res = await fetch("https://api.spotify.com/v1/me/tracks?limit=48", {
+    // 3*16
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
       Authorization: "Bearer " + process.env.SPOTIFY_OAUTH_TOKEN,
     },
   });
-  const payload = await res.json();
-  const tracks = payload.tracks.map((track: SpotifyTrack) => ({
+  const payload1 = await res.json();
+  const lastMonthDate = new Date();
+  lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+  const favTracks = payload1.items
+    .filter((item: SpotifyItem) => new Date(item.added_at) > lastMonthDate)
+    .map((item: SpotifyItem) => item.track.id);
+  const qs = encodeURI(favTracks.join(","));
+  const res2 = await fetch("https://api.spotify.com/v1/tracks?ids=" + qs, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + process.env.SPOTIFY_OAUTH_TOKEN,
+    },
+  });
+  const payload2 = await res2.json();
+
+  const tracks = payload2.tracks.map((track: SpotifyTrack) => ({
     name: track.name,
     artists: track.artists
       .map((artist: SpotifyArtist) => artist.name)
