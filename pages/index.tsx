@@ -29,7 +29,7 @@ const Home: NextPage<HomeProps> = ({ tracks }) => {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>Top of last month</h1>
+        <h1 className={styles.title}>Top of the month</h1>
 
         <ul className={styles.list}>
           {tracks.map((track) => (
@@ -94,6 +94,7 @@ export const getStaticProps: GetStaticProps = async () => {
     props: {
       tracks,
     },
+    // revalidate: 60 * 60 * 6, // 6h
   };
 };
 
