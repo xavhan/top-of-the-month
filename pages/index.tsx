@@ -85,7 +85,6 @@ export const getStaticProps: GetStaticProps = async () => {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        Authorization: "Bearer " + authPayload.access_token,
       },
     }
   );
@@ -104,7 +103,6 @@ export const getStaticProps: GetStaticProps = async () => {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        Authorization: "Bearer " + authPayload.access_token,
       },
     }
   );
@@ -124,7 +122,7 @@ export const getStaticProps: GetStaticProps = async () => {
     props: {
       tracks,
     },
-    // revalidate: 60 * 60 * 6, // 6h
+    revalidate: 60 * 60 * 6, // 6h
   };
 };
 
