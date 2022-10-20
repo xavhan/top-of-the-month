@@ -56,28 +56,58 @@ const Home: NextPage<HomeProps> = ({ tracks }) => {
 };
 
 export const getStaticProps: GetStaticProps = async () => {
-  const res = await fetch("https://api.spotify.com/v1/me/tracks?limit=48", {
-    // 3*16
+  var authOptions = {
+    method: "POST",
     headers: {
       Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + process.env.SPOTIFY_OAUTH_TOKEN,
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-  });
+  };
+  const auth = await fetch(
+    "https://accounts.spotify.com/api/token?" +
+      [
+        "grant_type=authorization_code",
+        "client_id=" + process.env.SPOTIFY_CLIENT_ID,
+        "client_secret=" + process.env.SPOTIFY_CLIENT_SECRET,
+        "code=" + process.env.SPOTIFY_CODE,
+        "scope=user-library-read",
+        "redirect_uri=https://top-of-the-month.netlify.app/",
+      ].join("&"),
+    authOptions
+  );
+  const authPayload = await auth.json();
+  console.log(authPayload);
+
+  const res = await fetch(
+    `https://api.spotify.com/v1/me/tracks?access_token=${authPayload.access_token}&limit=48`,
+    {
+      // 3*16
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + authPayload.access_token,
+      },
+    }
+  );
   const payload1 = await res.json();
+  console.log(payload1);
   const lastMonthDate = new Date();
   lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
   const favTracks = payload1.items
     .filter((item: SpotifyItem) => new Date(item.added_at) > lastMonthDate)
     .map((item: SpotifyItem) => item.track.id);
   const qs = encodeURI(favTracks.join(","));
-  const res2 = await fetch("https://api.spotify.com/v1/tracks?ids=" + qs, {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + process.env.SPOTIFY_OAUTH_TOKEN,
-    },
-  });
+  const res2 = await fetch(
+    `https://api.spotify.com/v1/tracks?access_token=${authPayload.access_token}&ids=` +
+      qs,
+    {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + authPayload.access_token,
+      },
+    }
+  );
   const payload2 = await res2.json();
 
   const tracks = payload2.tracks.map((track: SpotifyTrack) => ({
