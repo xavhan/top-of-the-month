@@ -1,20 +1,10 @@
 import type { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import { getAccessToken, getMyTracks, getTracks } from "../spotify/api";
 import styles from "../styles/Home.module.css";
-
-type TODO = any;
-type SpotifyTrack = TODO;
-type SpotifyArtist = TODO;
-type SpotifyItem = TODO;
-
-type Track = {
-  uri: string;
-  href: string;
-  artists: string;
-  name: string;
-  image: string;
-};
+import { September2022 } from "../data/2022_09";
+import { SpotifyArtist, SpotifyTrack, Track } from "../spotify/types";
 
 type HomeProps = {
   tracks: Track[];
@@ -25,11 +15,12 @@ const Home: NextPage<HomeProps> = ({ tracks }) => {
     <div className={styles.container}>
       <Head>
         <title>Top of the Month</title>
-        <meta name="description" content="Music curation of the past month" />
+        <meta name="description" content="Music curation for September 2022" />
       </Head>
 
       <main className={styles.main}>
         <h1 className={styles.title}>Top of the month</h1>
+        <h2>September 2022</h2>
 
         <ul className={styles.list}>
           {tracks.map((track) => (
@@ -56,31 +47,12 @@ const Home: NextPage<HomeProps> = ({ tracks }) => {
 };
 
 export const getStaticProps: GetStaticProps = async () => {
-  const res = await fetch("https://api.spotify.com/v1/me/tracks?limit=48", {
-    // 3*16
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + process.env.SPOTIFY_OAUTH_TOKEN,
-    },
-  });
-  const payload1 = await res.json();
-  const lastMonthDate = new Date();
-  lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
-  const favTracks = payload1.items
-    .filter((item: SpotifyItem) => new Date(item.added_at) > lastMonthDate)
-    .map((item: SpotifyItem) => item.track.id);
-  const qs = encodeURI(favTracks.join(","));
-  const res2 = await fetch("https://api.spotify.com/v1/tracks?ids=" + qs, {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + process.env.SPOTIFY_OAUTH_TOKEN,
-    },
-  });
-  const payload2 = await res2.json();
-
-  const tracks = payload2.tracks.map((track: SpotifyTrack) => ({
+  await getAccessToken();
+  const favTracks = September2022.slice(0, 48).map(
+    (url) => url.split("track/")[1]
+  );
+  const { tracks } = await getTracks(favTracks);
+  const myTracks = tracks.map((track: SpotifyTrack) => ({
     name: track.name,
     artists: track.artists
       .map((artist: SpotifyArtist) => artist.name)
@@ -92,9 +64,8 @@ export const getStaticProps: GetStaticProps = async () => {
 
   return {
     props: {
-      tracks,
+      tracks: myTracks,
     },
-    // revalidate: 60 * 60 * 6, // 6h
   };
 };
 
