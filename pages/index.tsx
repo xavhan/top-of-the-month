@@ -3,8 +3,12 @@ import Head from "next/head";
 import Image from "next/image";
 import { getAccessToken, getMyTracks, getTracks } from "../spotify/api";
 import styles from "../styles/Home.module.css";
-import { September2022 } from "../data/2022_09";
-import { SpotifyArtist, SpotifyTrack, Track } from "../spotify/types";
+import {
+  SpotifyArtist,
+  SpotifyItem,
+  SpotifyTrack,
+  Track,
+} from "../spotify/types";
 
 type HomeProps = {
   tracks: Track[];
@@ -19,8 +23,7 @@ const Home: NextPage<HomeProps> = ({ tracks }) => {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>Top of the month</h1>
-        <h2>September 2022</h2>
+        <h1 className={styles.title}>My last discoveries</h1>
 
         <ul className={styles.list}>
           {tracks.map((track) => (
@@ -48,10 +51,10 @@ const Home: NextPage<HomeProps> = ({ tracks }) => {
 
 export const getStaticProps: GetStaticProps = async () => {
   await getAccessToken();
-  const favTracks = September2022.slice(0, 48).map(
-    (url) => url.split("track/")[1]
+  const favTracks = await getMyTracks();
+  const { tracks } = await getTracks(
+    favTracks.map((i: SpotifyItem) => i.track.id)
   );
-  const { tracks } = await getTracks(favTracks);
   const myTracks = tracks.map((track: SpotifyTrack) => ({
     name: track.name,
     artists: track.artists
@@ -66,6 +69,7 @@ export const getStaticProps: GetStaticProps = async () => {
     props: {
       tracks: myTracks,
     },
+    revalidate: 60 * 60 * 6,
   };
 };
 
