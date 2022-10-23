@@ -18,12 +18,12 @@ const Home: NextPage<HomeProps> = ({ tracks }) => {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Top of the Month</title>
-        <meta name="description" content="Music curation for September 2022" />
+        <title>Latest musical discoveries</title>
+        <meta name="description" content="@xavhan latest musical discoveries" />
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>My last discoveries</h1>
+        <h1 className={styles.title}>My latest musical discoveries</h1>
 
         <ul className={styles.list}>
           {tracks.map((track) => (
